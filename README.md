@@ -1,2 +1,17 @@
-# nextcloud-gotify-notify
-Send notification when login to nextcloud to gotify instance
+# Gotify Login Notifier for Nextcloud
+
+A small Nextcloud app that sends a **Gotify** notification on every successful or failed user login.
+
+## 📦 Installation
+
+1. Clone the repository into your Nextcloud `apps` folder:
+   ```bash
+   cd /var/www/nextcloud/apps
+   git clone https://github.com/your-user/gotify_login.git
+   chown -R www-data:www-data gotify_login
+
+2. Add the environment variables in your docker-compose.yml:
+
+        GOTIFY_URL=https://gotify.example.com
+        GOTIFY_TOKEN=your_token
+        GOTIFY_PRIORITY_SUCCESS=5

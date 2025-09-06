@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<info>
+  <id>gotify_login</id>
+  <name>Gotify Login Notifier</name>
+  <summary>Envoie une notification Gotify à chaque connexion</summary>
+  <description>App Nextcloud qui envoie un webhook Gotify quand un utilisateur se connecte</description>
+  <version>1.0.0</version>
+  <licence>agpl</licence>
+  <author>Matthieu Tinnes</author>
+  <namespace>GotifyLogin</namespace>
+  <category>integration</category>
+  <dependencies>
+    <nextcloud min-version="27" max-version="30"/>
+  </dependencies>
+</info>
