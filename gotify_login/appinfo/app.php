@@ -33,16 +33,15 @@ function sendGotify($url, $token, $priority, $title, $message) {
 }
 
 // successful login
-\OCP\Util::connectHook('OC_User', 'post_login', function($params) use ($gotifyUrl, $gotifyToken, $priorityOk) {
-    $user = $params['uid'];
-    $ip   = $params['ip'];
-    sendGotify($gotifyUrl, $gotifyToken, $priorityOk, "Nextcloud Login ✅", "Connexion réussie de l’utilisateur **$user** depuis $ip");
-});
+Util::connectHook('OC_User', 'post_login', function(array $params) use ($sendGotify, $gotifyBaseUrl, $gotifyToken, $priorityOk, $info) {
+    $user = $params['uid'] ?? '(unknown)';
+    $info('post_login fired', ['uid' => $user]);
+    $sendGotify($gotifyBaseUrl, $gotifyToken, $priorityOk, 'Nextcloud Login ✅', "Connexion réussie de l’utilisateur **{$user}**");
+}, null);
 
-// failed login
-\OCP\Util::connectHook('OC_User', 'failed_login', function($params) use ($gotifyUrl, $gotifyToken, $priorityFail) {
-    $user = $params['uid'];
-    $ip   = $params['ip'];
-    sendGotify($gotifyUrl, $gotifyToken, $priorityFail, "Nextcloud Login ❌", "⚠️ Tentative échouée pour l’utilisateur **$user** depuis $ip");
-});
-    
+Util::connectHook('OC_User', 'failed_login', function(array $params) use ($sendGotify, $gotifyBaseUrl, $gotifyToken, $priorityFail, $info) {
+    $user = $params['uid'] ?? '(unknown)';
+    $ip   = $params['ip'] ?? ($_SERVER['REMOTE_ADDR'] ?? 'unknown-ip');
+    $info('failed_login fired', ['uid' => $user, 'ip' => $ip]);
+    $sendGotify($gotifyBaseUrl, $gotifyToken, $priorityFail, 'Nextcloud Login ❌', "⚠️ Tentative échouée pour l’utilisateur **{$user}** depuis {$ip}");
+}, null);
