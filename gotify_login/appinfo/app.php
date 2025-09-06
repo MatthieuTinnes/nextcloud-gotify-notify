@@ -1,47 +1,49 @@
 <?php
-
 namespace OCA\GotifyLogin;
 
 use OCP\Util;
+use OCP\User\Events\PostLoginEvent;
+use OCP\User\Events\FailedLoginEvent;
+use OCP\EventDispatcher\IEventDispatcher;
 
-// Gotify configuration from environment variables
-$gotifyUrl    = getenv('GOTIFY_URL');   // ex: https://gotify.example.com
-$gotifyToken  = getenv('GOTIFY_TOKEN');
-$priorityOk   = getenv('GOTIFY_PRIORITY_SUCCESS') ?: 2;
-$priorityFail = getenv('GOTIFY_PRIORITY_FAIL') ?: 5;
+$server = \OC::$server;
+$dispatcher = $server->get(IEventDispatcher::class);
 
-function sendGotify($url, $token, $priority, $title, $message) {
-    $endpoint = rtrim($url, '/') . '/message?token=' . $token;
+// Variables Gotify
+$gotifyUrl   = getenv('GOTIFY_URL');
+$gotifyToken = getenv('GOTIFY_TOKEN');
+$priorityOk  = getenv('GOTIFY_PRIORITY_SUCCESS') ?: 5;
+$priorityFail= getenv('GOTIFY_PRIORITY_FAIL') ?: 8;
 
+// Fonction d’envoi
+$sendGotify = function(string $title, string $message, int $priority) use ($gotifyUrl, $gotifyToken) {
+    if (!$gotifyUrl || !$gotifyToken) return;
+    $endpoint = rtrim($gotifyUrl, '/') . '/message?token=' . rawurlencode($gotifyToken);
     $payload = json_encode([
-        "message"  => $message,
-        "title"    => $title,
-        "priority" => (int)$priority,
-        "extras"   => [
-            "client::display" => [
-                "contentType" => "text/markdown"
-            ]
-        ]
+        'message'  => $message,
+        'title'    => $title,
+        'priority' => $priority,
+        'extras'   => [
+            'client::display' => ['contentType' => 'text/markdown'],
+        ],
     ]);
-
     $ch = curl_init($endpoint);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_exec($ch);
     curl_close($ch);
-}
+};
 
-// successful login
-Util::connectHook('OC_User', 'post_login', function(array $params) use ($sendGotify, $gotifyBaseUrl, $gotifyToken, $priorityOk, $info) {
-    $user = $params['uid'] ?? '(unknown)';
-    $info('post_login fired', ['uid' => $user]);
-    $sendGotify($gotifyBaseUrl, $gotifyToken, $priorityOk, 'Nextcloud Login ✅', "Connexion réussie de l’utilisateur **{$user}**");
-}, null);
+// Hook connexion réussie
+$dispatcher->addListener(PostLoginEvent::class, function(PostLoginEvent $event) use ($sendGotify, $priorityOk) {
+    $user = $event->getUser()->getUID();
+    $sendGotify('Nextcloud Login ✅', "User **$user** logged in successfully", $priorityOk);
+});
 
-Util::connectHook('OC_User', 'failed_login', function(array $params) use ($sendGotify, $gotifyBaseUrl, $gotifyToken, $priorityFail, $info) {
-    $user = $params['uid'] ?? '(unknown)';
-    $ip   = $params['ip'] ?? ($_SERVER['REMOTE_ADDR'] ?? 'unknown-ip');
-    $info('failed_login fired', ['uid' => $user, 'ip' => $ip]);
-    $sendGotify($gotifyBaseUrl, $gotifyToken, $priorityFail, 'Nextcloud Login ❌', "⚠️ Tentative échouée pour l’utilisateur **{$user}** depuis {$ip}");
-}, null);
+// Hook connexion échouée
+$dispatcher->addListener(FailedLoginEvent::class, function(FailedLoginEvent $event) use ($sendGotify, $priorityFail) {
+    $user = $event->getUid();
+    $ip   = $event->getRemoteAddress();
+    $sendGotify('Nextcloud Login ❌', "⚠️ Failed login attempt for user **$user** from $ip", $priorityFail);
+});
