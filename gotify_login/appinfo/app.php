@@ -45,3 +45,4 @@ function sendGotify($url, $token, $priority, $title, $message) {
     $ip   = $params['ip'];
     sendGotify($gotifyUrl, $gotifyToken, $priorityFail, "Nextcloud Login ❌", "⚠️ Tentative échouée pour l’utilisateur **$user** depuis $ip");
 });
+    

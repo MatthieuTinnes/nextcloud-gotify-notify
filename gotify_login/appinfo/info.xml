@@ -10,6 +10,6 @@
   <namespace>GotifyLogin</namespace>
   <category>integration</category>
   <dependencies>
-    <nextcloud min-version="27" max-version="30"/>
+    <nextcloud min-version="27" max-version="35"/>
   </dependencies>
 </info>
