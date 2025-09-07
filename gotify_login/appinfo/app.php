@@ -3,8 +3,8 @@ namespace OCA\GotifyLogin;
 
 use OCP\Util;
 use OCP\User\Events\PostLoginEvent;
-use OCP\User\Events\FailedLoginEvent;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Security\Events\ValidatePasswordLoginFailedEvent;
 
 $server = \OC::$server;
 $dispatcher = $server->get(IEventDispatcher::class);
@@ -42,8 +42,14 @@ $dispatcher->addListener(PostLoginEvent::class, function(PostLoginEvent $event) 
 });
 
 // Hook connexion échouée
-$dispatcher->addListener(FailedLoginEvent::class, function(FailedLoginEvent $event) use ($sendGotify, $priorityFail) {
+$dispatcher->addListener(ValidatePasswordLoginFailedEvent::class, function(ValidatePasswordLoginFailedEvent $event) use ($sendGotify, $priorityFail) {
+    $logger = \OC::$server->getLogger();
+    $logger->warning('DEBUG: ValidatePasswordLoginFailedEvent triggered', [
+        'uid' => $event->getUid(),
+        'ip'  => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+    ]);
+
     $user = $event->getUid();
-    $ip   = $event->getRemoteAddress();
+    $ip   = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
     $sendGotify('Nextcloud Login ❌', "⚠️ Failed login attempt for user **$user** from $ip", $priorityFail);
 });
