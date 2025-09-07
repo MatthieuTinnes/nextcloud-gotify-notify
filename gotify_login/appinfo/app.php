@@ -44,5 +44,6 @@ $dispatcher->addListener(PostLoginEvent::class, function(PostLoginEvent $event) 
 // Hook connexion échouée
 $dispatcher->addListener(AnyLoginFailedEvent::class, function(AnyLoginFailedEvent $event) use ($sendGotify, $priorityFail) {
     $ip   = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    $sendGotify('Nextcloud Login ❌', "⚠️ Failed login attempt from $ip", $priorityFail);
+    $user = $event->getLoginName();
+    $sendGotify('Nextcloud Login ❌', "⚠️ Failed login attempt from user $user from $ip", $priorityFail);
 });
