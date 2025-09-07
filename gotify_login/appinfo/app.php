@@ -4,7 +4,7 @@ namespace OCA\GotifyLogin;
 use OCP\Util;
 use OCP\User\Events\PostLoginEvent;
 use OCP\EventDispatcher\IEventDispatcher;
-use OCP\Security\Events\ValidatePasswordLoginFailedEvent;
+use OCP\Authentication\Events\AnyLoginFailedEvent;
 
 $server = \OC::$server;
 $dispatcher = $server->get(IEventDispatcher::class);
